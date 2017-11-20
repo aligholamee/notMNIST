@@ -23,6 +23,8 @@ from six.moves import cPickle as pickle
 url = 'https://commondatastorage.googleapis.com/books1000/'
 lastPercentReported = None
 dataRoot = '.'
+num_classes = 10
+np.random.seed(133)
 
 # ======================================== #
 # ============= Progress Hook ============ #
@@ -66,5 +68,36 @@ def getData(filename, expectedBytes, force = False):
 
     return destinationFileName
 
-test_filename = getData('notMNIST_small.tar.gz', 8458043)
-train_filename = getData('notMNIST_large.tar.gz', 247336696)
+# ======================================== #
+# ========== Extract the data ============ #
+# ======================================== #
+def extractData(fileName, force=False):
+    root = os.path.splitext(os.path.splitext(fileName)[0])[0]  # remove .tar.gz
+
+    if os.path.isdir(root) and not force:
+        # You may override by setting force=True.
+        print('%s already present - Skipping extraction of %s.' % (root, fileName))
+    else:
+        print('Extracting data for %s. This may take a while. Please wait.' % root)
+        tar = tarfile.open(fileName)
+        sys.stdout.flush()
+        tar.extractall(dataRoot)
+        tar.close()
+    data_folders = [
+    os.path.join(root, d) for d in sorted(os.listdir(root))
+    if os.path.isdir(os.path.join(root, d))]
+
+    if len(data_folders) != num_classes:
+        raise Exception(
+            'Expected %d folders, one per class. Found %d instead.' % (
+                num_classes, len(data_folders)))
+    print(data_folders)
+
+    return data_folders
+
+
+testFileName = getData('notMNIST_small.tar.gz', 8458043)
+trainFileName = getData('notMNIST_large.tar.gz', 247336696)
+
+testFolders = extractData(testFileName)
+trainFolders = extractData(trainFileName)
