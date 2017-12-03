@@ -19,6 +19,7 @@ from sklearn.linear_model import LogisticRegression
 from six.moves.urllib.request import urlretrieve
 from six.moves import cPickle as pickle
 from numpy import random
+import config
 
 # Constants 
 url = 'https://commondatastorage.googleapis.com/books1000/'
@@ -104,31 +105,31 @@ def loadLetter(folder, minNumOfImages):
     """Load the data for a single letter label."""
 
     imageFiles = os.listdir(folder)
-    dataset = np.ndarray(shape=(len(imageFiles), imageSize, imageSize),
+    dataset = np.ndarray(shape=(len(imageFiles), config.imageSize, config.imageSize),
                          dtype=np.float32)
     print(folder)
 
-    for image_index, image in enumerate(imageFiles):
-        image_file = os.path.join(folder, image)
+    for imageIndex, image in enumerate(imageFiles):
+        imageFile = os.path.join(folder, image)
         try:
-            image_data = (ndimage.imread(image_file).astype(float) - 
-                    pixelDepth / 2) / pixelDepth
-        if image_data.shape != (imageSize, imageSize):
-            raise Exception('Unexpected image shape: %s' % str(image_data.shape))
-        dataset[image_index, :, :] = image_data
+            imageData = (ndimage.imread(imageFile).astype(float) - 
+                    config.pixelDepth / 2) / config.pixelDepth
+        if imageData.shape != (imageSize, imageSize):
+            raise Exception('Unexpected image shape: %s' % str(imageData.shape))
+        dataset[imageIndex, :, :] = imageData
 
         except IOError as e:
-            print('Could not read:', image_file, ':', e, '- it\'s ok, skipping.')
+            print('Could not read:', imageFile, ':', e, '- it\'s ok, skipping.')
     
-    num_images = image_index + 1
-    dataset = dataset[0:num_images, :, :]
-    if num_images < minNumOfImages:
-        raise Exception('Many fewer images than expected: %d < %d' % (num_images, minNumOfImages))
+    numImages = imageIndex + 1
+    dataset = dataset[0:numImages, :, :]
+    if numImages < minNumOfImages:
+        raise Exception('Many fewer images than expected: %d < %d' % (numImages, minNumOfImages))
     
     print('Full dataset tensor:', dataset.shape)
     print('Mean:', np.mean(dataset))
     print('Standard deviation:', np.std(dataset))
-    
+
     return dataset
 
 # ======================================== #
