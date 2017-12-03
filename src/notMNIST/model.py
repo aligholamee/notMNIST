@@ -18,6 +18,7 @@ from scipy import ndimage
 from sklearn.linear_model import LogisticRegression
 from six.moves.urllib.request import urlretrieve
 from six.moves import cPickle as pickle
+from numpy import random
 
 # Constants 
 url = 'https://commondatastorage.googleapis.com/books1000/'
@@ -97,7 +98,16 @@ def extractData(fileName, force=False):
 
 
 testFileName = getData('notMNIST_small.tar.gz', 8458043)
-trainFileName = getData('notMNIST_large.tar.gz', 247336696)
+# trainFileName = getData('notMNIST_large.tar.gz', 247336696)
 
 testFolders = extractData(testFileName)
-trainFolders = extractData(trainFileName)
+# trainFolders = extractData(trainFileName)
+
+# Display some data :D
+base_dir = os.getcwd() + "/notMNIST_small/"
+letters = [chr(ord('A') + i) for i in range(0,10) ]
+for letter in letters:
+    letter_dir = base_dir + letter
+    random_image = random.choice(os.listdir(letter_dir))
+    display(Image(filename=letter_dir+ '/' + random_image))
+    print(letter)
