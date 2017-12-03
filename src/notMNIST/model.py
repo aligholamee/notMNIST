@@ -112,12 +112,10 @@ def loadLetter(folder, minNumOfImages):
     for imageIndex, image in enumerate(imageFiles):
         imageFile = os.path.join(folder, image)
         try:
-            imageData = (ndimage.imread(imageFile).astype(float) - 
-                    config.pixelDepth / 2) / config.pixelDepth
-        if imageData.shape != (imageSize, imageSize):
-            raise Exception('Unexpected image shape: %s' % str(imageData.shape))
-        dataset[imageIndex, :, :] = imageData
-
+            imageData = (ndimage.imread(imageFile).astype(float) - config.pixelDepth / 2) / config.pixelDepth
+            if imageData.shape != (config.imageSize, config.imageSize):
+                raise Exception('Unexpected image shape: %s' % str(imageData.shape))
+            dataset[imageIndex, :, :] = imageData
         except IOError as e:
             print('Could not read:', imageFile, ':', e, '- it\'s ok, skipping.')
     
