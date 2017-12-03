@@ -97,17 +97,38 @@ def extractData(fileName, force=False):
     return data_folders
 
 
+
+# ======================================== #
+# ========== Pickle the data  ============ #
+# ======================================== #
+def pickleData(dataFolders, minNumOfImagesPerClass, force=False):
+    datasetNames = []
+
+    # Create an array of pickled files in dataset
+    for folder in dataFolders: 
+        setFileName = folder + '.pickle'
+        datasetNames.append(setFileName)
+
+        # In case the data is pickled already
+        if os.path.exists(setFileName) and not force:
+            print('%s has already pickled. Skipping... ' %setFileName)
+        else:
+            print('Pickling %s.' % setFileName)
+            dataset = loadLetter(folder, minNumOfImagesPerClass)
+        try:
+            with open(setFileName, 'wb') as f:
+                pickle.dump(dataset, f, pickle.HIGHEST_PROTOCOL)
+        except Exception as e:
+            print('Unable to save data to', setFileName, ':', e)
+        
+    return datasetNames
+
+
 testFileName = getData('notMNIST_small.tar.gz', 8458043)
 # trainFileName = getData('notMNIST_large.tar.gz', 247336696)
 
 testFolders = extractData(testFileName)
 # trainFolders = extractData(trainFileName)
 
-# Display some data :D
-base_dir = os.getcwd() + "/notMNIST_small/"
-letters = [chr(ord('A') + i) for i in range(0,10) ]
-for letter in letters:
-    letter_dir = base_dir + letter
-    random_image = random.choice(os.listdir(letter_dir))
-    display(Image(filename=letter_dir+ '/' + random_image))
-    print(letter)
+
+
