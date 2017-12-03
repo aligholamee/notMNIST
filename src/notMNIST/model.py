@@ -97,6 +97,39 @@ def extractData(fileName, force=False):
     return data_folders
 
 
+# ======================================== #
+# =========== Load the letter ============ #
+# ======================================== #
+def loadLetter(folder, minNumOfImages):
+    """Load the data for a single letter label."""
+
+    imageFiles = os.listdir(folder)
+    dataset = np.ndarray(shape=(len(imageFiles), imageSize, imageSize),
+                         dtype=np.float32)
+    print(folder)
+
+    for image_index, image in enumerate(imageFiles):
+        image_file = os.path.join(folder, image)
+        try:
+            image_data = (ndimage.imread(image_file).astype(float) - 
+                    pixelDepth / 2) / pixelDepth
+        if image_data.shape != (imageSize, imageSize):
+            raise Exception('Unexpected image shape: %s' % str(image_data.shape))
+        dataset[image_index, :, :] = image_data
+
+        except IOError as e:
+            print('Could not read:', image_file, ':', e, '- it\'s ok, skipping.')
+    
+    num_images = image_index + 1
+    dataset = dataset[0:num_images, :, :]
+    if num_images < minNumOfImages:
+        raise Exception('Many fewer images than expected: %d < %d' % (num_images, minNumOfImages))
+    
+    print('Full dataset tensor:', dataset.shape)
+    print('Mean:', np.mean(dataset))
+    print('Standard deviation:', np.std(dataset))
+    
+    return dataset
 
 # ======================================== #
 # ========== Pickle the data  ============ #
