@@ -155,12 +155,21 @@ def pickleData(dataFolders, minNumOfImagesPerClass, force=False):
         
     return datasetNames
 
-
+# ======================================== #
+# ===========  Grab the data  ============ #
+# ======================================== #
 testFileName = getData('notMNIST_small.tar.gz', 8458043)
-# trainFileName = getData('notMNIST_large.tar.gz', 247336696)
+trainFileName = getData('notMNIST_large.tar.gz', 247336696)
 
+# ======================================== #
+# =========  extract the data  =========== #
+# ======================================== #
 testFolders = extractData(testFileName)
-# trainFolders = extractData(trainFileName)
+trainFolders = extractData(trainFileName)
+
+
+trainDataSets = pickleData(trainFolders, 45000)
+testDataSets = pickleData(trainFolders, 1800)
 
 
 
