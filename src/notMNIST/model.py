@@ -159,17 +159,28 @@ def pickleData(dataFolders, minNumOfImagesPerClass, force=False):
 # ===========  Grab the data  ============ #
 # ======================================== #
 testFileName = getData('notMNIST_small.tar.gz', 8458043)
-trainFileName = getData('notMNIST_large.tar.gz', 247336696)
+# trainFileName = getData('notMNIST_large.tar.gz', 247336696)
 
 # ======================================== #
 # =========  extract the data  =========== #
 # ======================================== #
 testFolders = extractData(testFileName)
-trainFolders = extractData(trainFileName)
+# trainFolders = extractData(trainFileName)
 
 
-trainDataSets = pickleData(trainFolders, 45000)
-testDataSets = pickleData(trainFolders, 1800)
+trainDataSets = pickleData(testFolders, 45000)
+# testDataSets = pickleData(trainFolders, 1800)
+
+# ======================================== #
+# ============  Problem 1  =============== #
+# ======================================== #
+base_dir = os.getcwd() + "/notMNIST_small/"
+letters = [chr(ord('A') + i) for i in range(0,10) ]
+for letter in letters:
+    letter_dir = base_dir + letter
+    random_image = random.choice(os.listdir(letter_dir))
+    display(Image(filename=letter_dir+ '/' + random_image))
+    print(letter)
 
 
 
