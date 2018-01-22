@@ -1,249 +1,200 @@
-# Training and Validation on notMNIST Dataset
-# ========================================
-# [] File Name : model.py
-#
-# [] Creation Date : December 2017
-#
-# [] Created By : Ali Gholami (aligholami7596@gmail.com)
-# ========================================
-#
+# These are all the modules we'll be using later. Make sure you can import them
+# before proceeding further.
 from __future__ import print_function
+import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import sys
 import tarfile
 from IPython.display import display, Image
-from scipy import ndimage
 from sklearn.linear_model import LogisticRegression
 from six.moves.urllib.request import urlretrieve
 from six.moves import cPickle as pickle
-from numpy import random
-import config
 
-# Constants 
+# Config the matplotlib backend as plotting inline in IPython
+%matplotlib inline
+
 url = 'https://commondatastorage.googleapis.com/books1000/'
-lastPercentReported = None
-dataRoot = '.'
+last_percent_reported = None
+data_root = '.' # Change me to store data elsewhere
+
+def download_progress_hook(count, blockSize, totalSize):
+  """A hook to report the progress of a download. This is mostly intended for users with
+  slow internet connections. Reports every 5% change in download progress.
+  """
+  global last_percent_reported
+  percent = int(count * blockSize * 100 / totalSize)
+
+  if last_percent_reported != percent:
+    if percent % 5 == 0:
+      sys.stdout.write("%s%%" % percent)
+      sys.stdout.flush()
+    else:
+      sys.stdout.write(".")
+      sys.stdout.flush()
+      
+    last_percent_reported = percent
+        
+def maybe_download(filename, expected_bytes, force=False):
+  """Download a file if not present, and make sure it's the right size."""
+  dest_filename = os.path.join(data_root, filename)
+  if force or not os.path.exists(dest_filename):
+    print('Attempting to download:', filename) 
+    filename, _ = urlretrieve(url + filename, dest_filename, reporthook=download_progress_hook)
+    print('\nDownload Complete!')
+  statinfo = os.stat(dest_filename)
+  if statinfo.st_size == expected_bytes:
+    print('Found and verified', dest_filename)
+  else:
+    raise Exception(
+      'Failed to verify ' + dest_filename + '. Can you get to it with a browser?')
+  return dest_filename
+
+train_filename = maybe_download('notMNIST_large.tar.gz', 247336696)
+test_filename = maybe_download('notMNIST_small.tar.gz', 8458043)
+
 num_classes = 10
 np.random.seed(133)
 
-# ======================================== #
-# ============= Progress Hook ============ #
-# ======================================== #
-def downloadProgressHook(count, blockSize, totalSize):
-    # Reports the progress of a download
-    global lastPercentReported
-    percent = int(count * blockSize * 100 / totalSize)
-
-    if lastPercentReported != percent:
-        if percent % 5 == 0:
-            sys.stdout.write("%s%%" % percent)
-            sys.stdout.flush()
-        else:
-            sys.stdout.write(".")
-            sys.stdout.flush()
-
-        lastPercentReported = percent
-
-# ======================================== #
-# ========== Download The Data =========== #
-# ======================================== #
-def getData(filename, expectedBytes, force = False):
-    # Download a file if not present, and make sure it's the right size
-    destinationFileName = os.path.join(dataRoot, filename)
-
-    # Get the file
-    if force or not os.path.exists(destinationFileName):
-        print('Attempting to download:', filename) 
-        filename, _ = urlretrieve(url + filename, destinationFileName, reporthook = downloadProgressHook)
-        print('\nDownload Complete!')
-
-    statinfo = os.stat(destinationFileName)
-
-    # Verify the download
-    if statinfo.st_size == expectedBytes:
-        print('Found and verified', destinationFileName)
-    else:
-        raise Exception(
-            'Failed to verify ' + destinationFileName + '. Can you get to it with a browser?')
-
-    return destinationFileName
-
-# ======================================== #
-# ========== Extract the data ============ #
-# ======================================== #
-def extractData(fileName, force=False):
-    root = os.path.splitext(os.path.splitext(fileName)[0])[0]  # remove .tar.gz
-
-    if os.path.isdir(root) and not force:
-        # You may override by setting force=True.
-        print('%s already present - Skipping extraction of %s.' % (root, fileName))
-    else:
-        print('Extracting data for %s. This may take a while. Please wait.' % root)
-        tar = tarfile.open(fileName)
-        sys.stdout.flush()
-        tar.extractall(dataRoot)
-        tar.close()
-    data_folders = [
+def maybe_extract(filename, force=False):
+  root = os.path.splitext(os.path.splitext(filename)[0])[0]  # remove .tar.gz
+  if os.path.isdir(root) and not force:
+    # You may override by setting force=True.
+    print('%s already present - Skipping extraction of %s.' % (root, filename))
+  else:
+    print('Extracting data for %s. This may take a while. Please wait.' % root)
+    tar = tarfile.open(filename)
+    sys.stdout.flush()
+    tar.extractall(data_root)
+    tar.close()
+  data_folders = [
     os.path.join(root, d) for d in sorted(os.listdir(root))
     if os.path.isdir(os.path.join(root, d))]
+  if len(data_folders) != num_classes:
+    raise Exception(
+      'Expected %d folders, one per class. Found %d instead.' % (
+        num_classes, len(data_folders)))
+  print(data_folders)
+  return data_folders
+  
+train_folders = maybe_extract(train_filename)
+test_folders = maybe_extract(test_filename)
 
-    if len(data_folders) != num_classes:
-        raise Exception(
-            'Expected %d folders, one per class. Found %d instead.' % (
-                num_classes, len(data_folders)))
-    print(data_folders)
+image_size = 28  # Pixel width and height.
+pixel_depth = 255.0  # Number of levels per pixel.
 
-    return data_folders
-
-
-# ======================================== #
-# =========== Load the letter ============ #
-# ======================================== #
-def loadLetter(folder, minNumOfImages):
-    """Load the data for a single letter label."""
-
-    imageFiles = os.listdir(folder)
-    dataset = np.ndarray(shape=(len(imageFiles), config.imageSize, config.imageSize),
-                         dtype=np.float)
-    print(folder)
-
-    for imageIndex, image in enumerate(imageFiles):
-        imageFile = os.path.join(folder, image)
-        try:
-            imageData = (ndimage.imread(imageFile).astype(float) - config.pixelDepth / 2) / config.pixelDepth
-            if imageData.shape != (config.imageSize, config.imageSize):
-                raise Exception('Unexpected image shape: %s' % str(imageData.shape))
-            dataset[imageIndex, :, :] = imageData
-        except IOError as e:
-            print('Could not read:', imageFile, ':', e, '- it\'s ok, skipping.')
+def load_letter(folder, min_num_images):
+  """Load the data for a single letter label."""
+  image_files = os.listdir(folder)
+  dataset = np.ndarray(shape=(len(image_files), image_size, image_size),
+                         dtype=np.float32)
+  print(folder)
+  num_images = 0
+  for image in image_files:
+    image_file = os.path.join(folder, image)
+    try:
+      image_data = (imageio.imread(image_file).astype(float) - 
+                    pixel_depth / 2) / pixel_depth
+      if image_data.shape != (image_size, image_size):
+        raise Exception('Unexpected image shape: %s' % str(image_data.shape))
+      dataset[num_images, :, :] = image_data
+      num_images = num_images + 1
+    except (IOError, ValueError) as e:
+      print('Could not read:', image_file, ':', e, '- it\'s ok, skipping.')
     
-    numImages = imageIndex + 1
-    dataset = dataset[0:numImages, :, :]
-    if numImages < minNumOfImages:
-        raise Exception('Many fewer images than expected: %d < %d' % (numImages, minNumOfImages))
+  dataset = dataset[0:num_images, :, :]
+  if num_images < min_num_images:
+    raise Exception('Many fewer images than expected: %d < %d' %
+                    (num_images, min_num_images))
     
-    print('Full dataset tensor:', dataset.shape)
-    print('Mean:', np.mean(dataset))
-    print('Standard deviation:', np.std(dataset))
-
-    return dataset
-
-# ======================================== #
-# ========== Pickle the data  ============ #
-# ======================================== #
-def pickleData(dataFolders, minNumOfImagesPerClass, force=False):
-    datasetNames = []
-
-    # Create an array of pickled files in dataset
-    for folder in dataFolders: 
-        setFileName = folder + '.pickle'
-        datasetNames.append(setFileName)
-
-        # In case the data is pickled already
-        if os.path.exists(setFileName) and not force:
-            print('%s has already pickled. Skipping... ' %setFileName)
-        else:
-            print('Pickling %s.' % setFileName)
-            dataset = loadLetter(folder, minNumOfImagesPerClass)
-        try:
-            with open(setFileName, 'wb') as f:
-                pickle.dump(dataset, f, pickle.HIGHEST_PROTOCOL)
-        except Exception as e:
-            print('Unable to save data to', setFileName, ':', e)
+  print('Full dataset tensor:', dataset.shape)
+  print('Mean:', np.mean(dataset))
+  print('Standard deviation:', np.std(dataset))
+  return dataset
         
-    return datasetNames
-
-# ======================================== #
-# ===========  Grab the data  ============ #
-# ======================================== #
-testFileName = getData('notMNIST_small.tar.gz', 8458043)
-
-# ======================================== #
-# =========  extract the data  =========== #
-# ======================================== #
-testFolders = extractData(testFileName)
-
-# ======================================== #
-# ============  Problem 1  =============== #
-# ======================================== #
-# base_dir = os.getcwd() + "/notMNIST_small/"
-# letters = [chr(ord('A') + i) for i in range(0,10) ]
-# for letter in letters:
-#     letter_dir = base_dir + letter
-#     random_image = random.choice(os.listdir(letter_dir))
-#     display(Image(filename=letter_dir+ '/' + random_image))
-#     print(letter)
-
-
-testDataSets = pickleData(testFolders, 1800)
-
-# ======================================== #
-# ============  Problem 2  =============== #
-# ======================================== #
-# A_list = pickle.load(open("notMNIST_small/A.pickle", "rb"))
-# random_letter = random.choice(A_list)
-# plt.imshow(random_letter)
-
-# ======================================== #
-# ============  Problem 3  =============== #
-# ======================================== #
-def makeArrays(numberOfRows, imgSize):
-    if numberOfRows:
-        dataset = np.ndarray(shape = (numberOfRows, imgSize, imgSize), 
-                             dtype = np.float)
-        labels = np.ndarray(numberOfRows, dtype = np.int)
+def maybe_pickle(data_folders, min_num_images_per_class, force=False):
+  dataset_names = []
+  for folder in data_folders:
+    set_filename = folder + '.pickle'
+    dataset_names.append(set_filename)
+    if os.path.exists(set_filename) and not force:
+      # You may override by setting force=True.
+      print('%s already present - Skipping pickling.' % set_filename)
     else:
-        dataset, labels = None, None
+      print('Pickling %s.' % set_filename)
+      dataset = load_letter(folder, min_num_images_per_class)
+      try:
+        with open(set_filename, 'wb') as f:
+          pickle.dump(dataset, f, pickle.HIGHEST_PROTOCOL)
+      except Exception as e:
+        print('Unable to save data to', set_filename, ':', e)
+  
+  return dataset_names
+
+train_datasets = maybe_pickle(train_folders, 45000)
+test_datasets = maybe_pickle(test_folders, 1800)
+
+def make_arrays(nb_rows, img_size):
+  if nb_rows:
+    dataset = np.ndarray((nb_rows, img_size, img_size), dtype=np.float32)
+    labels = np.ndarray(nb_rows, dtype=np.int32)
+  else:
+    dataset, labels = None, None
+  return dataset, labels
+
+def merge_datasets(pickle_files, train_size, valid_size=0):
+  num_classes = len(pickle_files)
+  valid_dataset, valid_labels = make_arrays(valid_size, image_size)
+  train_dataset, train_labels = make_arrays(train_size, image_size)
+  vsize_per_class = valid_size // num_classes
+  tsize_per_class = train_size // num_classes
     
-    return dataset, labels
-
-def mergePickledDatasets(pickleFiles, trainSize, validSize = 0):
-    numClasses = len(pickleFiles)
-
-    validDataset, validLabels = makeArrays(validSize, config.imageSize)
-    trainDataset, trainLabels = makeArrays(trainSize, config.imageSize)
-
-    vSizePerClass = validSize // numClasses
-    tSizePerClass = trainSize // numClasses
-
-    startV, startT, endV, endT = 0, 0, vSizePerClass, tSizePerClass
-
-    for label, pickleFile in enumerate(pickleFiles):
-        try:
-            with open(pickleFile, 'rb') as f:
-                letterSet = pickle.load(f)
-
-                # Shuffle's the letters 
-                np.random.shuffle(letterSet)
-                if validDataset is not None:
-                    validLetter = letterSet[:vSizePerClass, :, :]
-                    validDataset[startV:endV, :, :] = validLetter
-                    validLabels[startV:endV] = label
-                    startV += vSizePerClass
-                    endV += vSizePerClass
-                
-                trainLetter = letterSet[:tSizePerClass, :, :]
-                trainDataset[startT:endT, :, :] = trainLetter
-                trainLabels[startT, endT] = label
-                startT += tSizePerClass
-                endT += tSizePerClass
-        except Exception as e:
-            print('Unable to process data from', pickleFile, ':', e)
-            raise
+  start_v, start_t = 0, 0
+  end_v, end_t = vsize_per_class, tsize_per_class
+  end_l = vsize_per_class+tsize_per_class
+  for label, pickle_file in enumerate(pickle_files):       
+    try:
+      with open(pickle_file, 'rb') as f:
+        letter_set = pickle.load(f)
+        # let's shuffle the letters to have random validation and training set
+        np.random.shuffle(letter_set)
+        if valid_dataset is not None:
+          valid_letter = letter_set[:vsize_per_class, :, :]
+          valid_dataset[start_v:end_v, :, :] = valid_letter
+          valid_labels[start_v:end_v] = label
+          start_v += vsize_per_class
+          end_v += vsize_per_class
+                    
+        train_letter = letter_set[vsize_per_class:end_l, :, :]
+        train_dataset[start_t:end_t, :, :] = train_letter
+        train_labels[start_t:end_t] = label
+        start_t += tsize_per_class
+        end_t += tsize_per_class
+    except Exception as e:
+      print('Unable to process data from', pickle_file, ':', e)
+      raise
     
-    return validDataset, validLabels, trainDataset, trainLabels
+  return valid_dataset, valid_labels, train_dataset, train_labels
+            
+            
+train_size = 200000
+valid_size = 10000
+test_size = 10000
 
-trainSize = 200000
-validationSize = 10000
-testSize = 10000
-
-# Create train and validation datasets out of trainDataSets
-validDataset, validLabels, trainDataset, trainLabels = mergePickledDatasets(
-    trainDataSets, trainSize, validSize)
-
+valid_dataset, valid_labels, train_dataset, train_labels = merge_datasets(
+  train_datasets, train_size, valid_size)
+_, _, test_dataset, test_labels = merge_datasets(test_datasets, test_size)
 
 print('Training:', train_dataset.shape, train_labels.shape)
 print('Validation:', valid_dataset.shape, valid_labels.shape)
 print('Testing:', test_dataset.shape, test_labels.shape)
+
+def randomize(dataset, labels):
+  permutation = np.random.permutation(labels.shape[0])
+  shuffled_dataset = dataset[permutation,:,:]
+  shuffled_labels = labels[permutation]
+  return shuffled_dataset, shuffled_labels
+train_dataset, train_labels = randomize(train_dataset, train_labels)
+test_dataset, test_labels = randomize(test_dataset, test_labels)
+valid_dataset, valid_labels = randomize(valid_dataset, valid_labels)
