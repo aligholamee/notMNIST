@@ -106,7 +106,7 @@ def loadLetter(folder, minNumOfImages):
 
     imageFiles = os.listdir(folder)
     dataset = np.ndarray(shape=(len(imageFiles), config.imageSize, config.imageSize),
-                         dtype=np.float32)
+                         dtype=np.float)
     print(folder)
 
     for imageIndex, image in enumerate(imageFiles):
@@ -159,13 +159,11 @@ def pickleData(dataFolders, minNumOfImagesPerClass, force=False):
 # ===========  Grab the data  ============ #
 # ======================================== #
 testFileName = getData('notMNIST_small.tar.gz', 8458043)
-# trainFileName = getData('notMNIST_large.tar.gz', 247336696)
 
 # ======================================== #
 # =========  extract the data  =========== #
 # ======================================== #
 testFolders = extractData(testFileName)
-# trainFolders = extractData(trainFileName)
 
 # ======================================== #
 # ============  Problem 1  =============== #
@@ -178,12 +176,25 @@ testFolders = extractData(testFileName)
 #     display(Image(filename=letter_dir+ '/' + random_image))
 #     print(letter)
 
- trainDataSets = pickleData(testFolders, 45000)
-# testDataSets = pickleData(trainFolders, 1800)
+
+testDataSets = pickleData(testFolders, 1800)
 
 # ======================================== #
 # ============  Problem 2  =============== #
 # ======================================== #
-A_list = pickle.load(open("notMNIST_small/A.pickle", "rb"))
-random_letter = random.choice(A_list)
-plt.imshow(random_letter)
+# A_list = pickle.load(open("notMNIST_small/A.pickle", "rb"))
+# random_letter = random.choice(A_list)
+# plt.imshow(random_letter)
+
+# ======================================== #
+# ============  Problem 3  =============== #
+# ======================================== #
+def makeArrays(numberOfRows, imgSize):
+    if numberOfRows:
+        dataset = np.ndarray(shape = (numberOfRows, imgSize, imgSize), 
+                             dtype = np.float)
+        labels = np.ndarray(numberOfRows, dtype = np.int)
+    else:
+        dataset, labels = None, None
+    
+    return dataset, labels
