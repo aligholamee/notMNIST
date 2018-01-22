@@ -198,3 +198,52 @@ def makeArrays(numberOfRows, imgSize):
         dataset, labels = None, None
     
     return dataset, labels
+
+def mergePickledDatasets(pickleFiles, trainSize, validSize = 0):
+    numClasses = len(pickleFiles)
+
+    validDataset, validLabels = makeArrays(validSize, config.imageSize)
+    trainDataset, trainLabels = makeArrays(trainSize, config.imageSize)
+
+    vSizePerClass = validSize // numClasses
+    tSizePerClass = trainSize // numClasses
+
+    startV, startT, endV, endT = 0, 0, vSizePerClass, tSizePerClass
+
+    for label, pickleFile in enumerate(pickleFiles):
+        try:
+            with open(pickleFile, 'rb') as f:
+                letterSet = pickle.load(f)
+
+                # Shuffle's the letters 
+                np.random.shuffle(letterSet)
+                if validDataset is not None:
+                    validLetter = letterSet[:vSizePerClass, :, :]
+                    validDataset[startV:endV, :, :] = validLetter
+                    validLabels[startV:endV] = label
+                    startV += vSizePerClass
+                    endV += vSizePerClass
+                
+                trainLetter = letterSet[:tSizePerClass, :, :]
+                trainDataset[startT:endT, :, :] = trainLetter
+                trainLabels[startT, endT] = label
+                startT += tSizePerClass
+                endT += tSizePerClass
+        except Exception as e:
+            print('Unable to process data from', pickleFile, ':', e)
+            raise
+    
+    return validDataset, validLabels, trainDataset, trainLabels
+
+trainSize = 200000
+validationSize = 10000
+testSize = 10000
+
+# Create train and validation datasets out of trainDataSets
+validDataset, validLabels, trainDataset, trainLabels = mergePickledDatasets(
+    trainDataSets, trainSize, validSize)
+
+
+print('Training:', train_dataset.shape, train_labels.shape)
+print('Validation:', valid_dataset.shape, valid_labels.shape)
+print('Testing:', test_dataset.shape, test_labels.shape)
