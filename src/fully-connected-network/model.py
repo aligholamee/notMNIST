@@ -68,7 +68,7 @@ with GRAPH.as_default():
     """
         Load the training, validation and test data into the constants attached to the graph
     """
-    TF_TRAIN_DATASET = tf.constant(TRAIN_DATASET[:TRAIN_SUBSET]) 
+    TF_TRAIN_DATASET = tf.constant(TRAIN_DATASET[:TRAIN_SUBSET])
     TF_TRAIN_LABELS = tf.constant(TRAIN_LABELS[:TRAIN_SUBSET])
     TF_VALID_DATASET = tf.constant(VALID_DATASET[:TRAIN_SUBSET])
     TF_TEST_DATASET = tf.constant(TEST_DATASET[:TRAIN_SUBSET])
@@ -80,4 +80,21 @@ with GRAPH.as_default():
     WEIGHTS = tf.variable(tf.truncated_normal([IMAGE_SIZE * IMAGE_SIZE, NUM_LABELS]))
     BIASES = tf.variable(tf.zeros([NUM_LABELS]))
 
+    """
+        Compute the logits WX + b and then apply D(S(WX + b), L) on them
+    """
+    LOGITS = tf.matmul(TF_TRAIN_DATASET, WEIGHTS) + BIASES
+    LOSS = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(LOGITS, TF_TRAIN_LABELS))
+
+    """ 
+        Find the minimum of the loss using gradient descent optimizer
+        remember that the optimizer is an algorithm now - ready to be tested on the test data
+    """
+    OPTIMIZER = tf.train.GradientDescentOptimizer(0.1).minimize(LOSS)
+
+
     
+
+    
+
+
