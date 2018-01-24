@@ -38,6 +38,13 @@ with open(pickle_file, "rb") as f:
 
 # Reformat to the one-hot encoding mode
 # def reformatData(dataset, labels):
+image_size = 28
+num_labels = 10
+def reformat(dataset, labeles):
+    n_dataset = dataset.reshape((1, image_size * image_size)).astype(np.float)
 
+    # Convert to the one hot format
+    n_labels = (np.arange(num_labels) == n_dataset[:, None]).astype(np.float)
 
-    
+    return n_dataset, n_labels
+
