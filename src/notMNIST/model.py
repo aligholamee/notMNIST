@@ -1,3 +1,12 @@
+# Training and Validation on notMNIST Dataset
+# ========================================
+# [] File Name : model.py
+#
+# [] Creation Date : January 2017
+#
+# [] Created By : Ali Gholami (aligholami7596@gmail.com)
+# ========================================
+#
 # These are all the modules we'll be using later. Make sure you can import them
 # before proceeding further.
 from __future__ import print_function
@@ -11,9 +20,6 @@ from IPython.display import display, Image
 from sklearn.linear_model import LogisticRegression
 from six.moves.urllib.request import urlretrieve
 from six.moves import cPickle as pickle
-
-# Config the matplotlib backend as plotting inline in IPython
-%matplotlib inline
 
 url = 'https://commondatastorage.googleapis.com/books1000/'
 last_percent_reported = None
