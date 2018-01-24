@@ -50,3 +50,7 @@ test_dataset, test_labels = reformat(test_dataset, test_labels)
 print("Training Set ", train_dataset.shape, train_labels.shape)
 print("Validation Set", valid_dataset.shape, valid_labels.shape)
 print("Test Set", test_dataset.shape, test_labels.shape)
+
+# Implements a gradient descent using tensorflow computational graph
+train_subset = 10000
+
