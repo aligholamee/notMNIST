@@ -48,10 +48,10 @@ def reformat(dataset, labels):
     """
         Reformat data to the one-hot and flattened mode
     """
-    n_dataset = dataset.reshape((1, IMAGE_SIZE * IMAGE_SIZE)).astype(np.float)
+    n_dataset = dataset.reshape((-1, IMAGE_SIZE * IMAGE_SIZE)).astype(np.float32)
 
     # Convert to the one hot format
-    n_labels = (np.arange(NUM_LABELS) == labels[:, None]).astype(np.float)
+    n_labels = (np.arange(NUM_LABELS) == labels[:, None]).astype(np.float32)
 
     return n_dataset, n_labels
 
@@ -83,14 +83,14 @@ with GRAPH.as_default():
     """
         Initialize the weights matrix with normal distribution and the biases with zero values
     """
-    WEIGHTS = tf.variable(tf.truncated_normal([IMAGE_SIZE * IMAGE_SIZE, NUM_LABELS]))
-    BIASES = tf.variable(tf.zeros([NUM_LABELS]))
+    WEIGHTS = tf.Variable(tf.truncated_normal([IMAGE_SIZE * IMAGE_SIZE, NUM_LABELS]))
+    BIASES = tf.Variable(tf.zeros([NUM_LABELS]))
 
     """
         Compute the logits WX + b and then apply D(S(WX + b), L) on them
     """
     LOGITS = tf.matmul(TF_TRAIN_DATASET, WEIGHTS) + BIASES
-    LOSS = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(LOGITS, TF_TRAIN_LABELS))
+    LOSS = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels = TF_TRAIN_LABELS, logits = LOGITS))
 
     """ 
         Find the minimum of the loss using gradient descent optimizer
