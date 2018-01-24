@@ -30,12 +30,6 @@ with open(pickle_file, "rb") as f:
     # Free some memory
     del save
 
-    # Display the openend files 
-    print("Training Set ", train_dataset.shape, train_labels.shape)
-    print("Validation Set", valid_dataset.shape, valid_labels.shape)
-    print("Test Set", test_dataset.shape, test_labels.shape)
-
-
 # Reformat to the one-hot encoding mode
 # def reformatData(dataset, labels):
 image_size = 28
@@ -48,3 +42,11 @@ def reformat(dataset, labeles):
 
     return n_dataset, n_labels
 
+train_dataset, train_labels =  reformat(train_dataset, train_labels) 
+valid_dataset, valid_labels = reformat(valid_dataset, valid_labels)
+test_dataset, test_labels = reformat(test_dataset, test_labels)
+
+# Display the openend files 
+print("Training Set ", train_dataset.shape, train_labels.shape)
+print("Validation Set", valid_dataset.shape, valid_labels.shape)
+print("Test Set", test_dataset.shape, test_labels.shape)
