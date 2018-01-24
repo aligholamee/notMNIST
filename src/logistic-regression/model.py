@@ -1,8 +1,9 @@
 # Training and Validation on notMNIST Dataset
+# Logistic regression implementation using sklearn
 # ========================================
 # [] File Name : model.py
 #
-# [] Creation Date : January 2017
+# [] Creation Date : January 2018
 #
 # [] Created By : Ali Gholami (aligholami7596@gmail.com)
 # ========================================
