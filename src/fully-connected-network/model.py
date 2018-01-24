@@ -60,3 +60,24 @@ print("Test Set", TEST_DATASET.shape, TEST_LABELS.shape)
 
 # Implements a gradient descent using tensorflow computational graph
 TRAIN_SUBSET = 10000
+
+GRAPH = tf.Graph()
+
+with GRAPH.as_default():
+
+    """
+        Load the training, validation and test data into the constants attached to the graph
+    """
+    TF_TRAIN_DATASET = tf.constant(TRAIN_DATASET[:TRAIN_SUBSET]) 
+    TF_TRAIN_LABELS = tf.constant(TRAIN_LABELS[:TRAIN_SUBSET])
+    TF_VALID_DATASET = tf.constant(VALID_DATASET[:TRAIN_SUBSET])
+    TF_TEST_DATASET = tf.constant(TEST_DATASET[:TRAIN_SUBSET])
+
+
+    """
+        Initialize the weights matrix with normal distribution and the biases with zero values
+    """
+    WEIGHTS = tf.variable(tf.truncated_normal([IMAGE_SIZE * IMAGE_SIZE, NUM_LABELS]))
+    BIASES = tf.variable(tf.zeros([NUM_LABELS]))
+
+    
