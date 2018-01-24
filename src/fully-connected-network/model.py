@@ -105,7 +105,7 @@ with GRAPH.as_default():
     VALID_PREDICTION = tf.nn.softmax(tf.matmul(TF_VALID_DATASET, WEIGHTS) + BIASES)
     TEST_PREDICTION = tf.nn.softmax(tf.matmul(TF_TEST_DATASET, WEIGHTS) + BIASES)
 
-NUM_ITERATIONS = 800
+NUM_ITERATIONS = 3000
 
 with tf.Session(graph=GRAPH) as session:
     """
@@ -119,7 +119,13 @@ with tf.Session(graph=GRAPH) as session:
             if(step % 100 == 0):
                 print("Loss at step ", step, ": ", l)
                 print("Training accuracy: ", accuracy(predictions, TRAIN_LABELS[:TRAIN_SUBSET, :]))
-        
+    
+    """
+        Displays the test prediction results
+    """
+    print("Validation accuracy: ", accuracy(VALID_PREDICTION.eval(), VALID_LABELS))
+    print("Test accuracy: ", accuracy(TEST_PREDICTION.eval(), TEST_LABELS))
+
 
 
     
