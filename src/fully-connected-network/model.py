@@ -74,7 +74,7 @@ with GRAPH.as_default():
     """
         Load the training, validation and test data into the constants attached to the graph
     """
-    TF_TRAIN_DATASET = tf.constant(TRAIN_DATASET[:TRAIN_SUBSET])
+    TF_TRAIN_DATASET = tf.constant(TRAIN_DATASET[:TRAIN_SUBSET, :])
     TF_TRAIN_LABELS = tf.constant(TRAIN_LABELS[:TRAIN_SUBSET])
     TF_VALID_DATASET = tf.constant(VALID_DATASET[:TRAIN_SUBSET])
     TF_TEST_DATASET = tf.constant(TEST_DATASET[:TRAIN_SUBSET])
@@ -97,6 +97,28 @@ with GRAPH.as_default():
         remember that the optimizer is an algorithm now - ready to be tested on the test data
     """
     OPTIMIZER = tf.train.GradientDescentOptimizer(0.1).minimize(LOSS)
+
+    """
+        Predictions for the training, validation, and test data.
+    """
+    TRAIN_PREDICTION = tf.nn.softmax(LOGITS)
+    VALID_PREDICTION = tf.nn.softmax(tf.matmul(TF_VALID_DATASET, WEIGHTS) + BIASES)
+    TEST_PREDICTION = tf.nn.softmax(tf.matmul(TF_TEST_DATASET, WEIGHTS) + BIASES)
+
+NUM_ITERATIONS = 800
+
+with tf.Session(graph=GRAPH) as session
+    """
+        Start the above variable initialization
+    """
+    tf.initialize_all_variables().run()
+    print("Variables initialized")
+
+    for step in xrange(NUM_ITERATIONS):
+            _, l, predictions = session.run([OPTIMIZER, LOSS, TRAIN_PREDICTION])
+            if(step % 100 == 0):
+                print("Loss at step ", step, ": ", l)
+                print("Training accuracy: ", accuracy(predictions, TRAIN_LABELS[:TRAIN_SUBSET, :]))
 
 
     
