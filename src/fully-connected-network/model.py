@@ -107,18 +107,19 @@ with GRAPH.as_default():
 
 NUM_ITERATIONS = 800
 
-with tf.Session(graph=GRAPH) as session
+with tf.Session(graph=GRAPH) as session:
     """
         Start the above variable initialization
     """
     tf.initialize_all_variables().run()
     print("Variables initialized")
 
-    for step in xrange(NUM_ITERATIONS):
+    for step in range(NUM_ITERATIONS):
             _, l, predictions = session.run([OPTIMIZER, LOSS, TRAIN_PREDICTION])
             if(step % 100 == 0):
                 print("Loss at step ", step, ": ", l)
                 print("Training accuracy: ", accuracy(predictions, TRAIN_LABELS[:TRAIN_SUBSET, :]))
+        
 
 
     
