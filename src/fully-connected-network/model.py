@@ -38,6 +38,12 @@ with open(PICKLE_FILE, "rb") as f:
 IMAGE_SIZE = 28
 NUM_LABELS = 10
 
+def accuracy(predictions, labels):
+    """
+        Divides the number of true predictions to the number of total predictions
+    """
+    return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1)) / predictions.shape[0])
+
 def reformat(dataset, labels):
     """
         Reformat data to the one-hot and flattened mode
