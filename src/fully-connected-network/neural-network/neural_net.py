@@ -85,7 +85,7 @@ with GRAPH.as_default():
     """
     with tf.name_scope("MehradHidden"):
         """
-            Initializer the hidden weights and biases
+            Initialize the hidden weights and biases
         """
         HIDDEN_WEIGHTS = tf.Variable(tf.truncated_normal([IMAGE_SIZE * IMAGE_SIZE, HIDDEN_NODES]))
         HIDDEN_BIASES = tf.Variable(tf.zeros([HIDDEN_NODES]))
@@ -113,5 +113,10 @@ with GRAPH.as_default():
         VALID_LOGTIS = tf.matmul(VALID_HIDDEN_LOGITS, WEIGHTS) + BIASES
         TEST_LOGITS = tf.matmul(TEST_HIDDEN_LOGITS, WEIGHTS) + BIASES
 
-        
+        LOSS = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(TRAIN_LOGITS, TF_TRAIN_LABELS))
 
+        OPTIMIZER = tf.train.GradientDescentOptimizer(0.5).minimize(LOSS)
+
+        TRAIN_PREDICTION = tf.nn.softmax(TRAIN_LOGITS) 
+        VALID_PREDICTION = tf.nn.softmax(VALID_LOGTIS)
+        TEST_PREDICTION = tf.nn.softmax(TEST_LOGITS)
