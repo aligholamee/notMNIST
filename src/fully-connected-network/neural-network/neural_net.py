@@ -120,3 +120,34 @@ with GRAPH.as_default():
         TRAIN_PREDICTION = tf.nn.softmax(TRAIN_LOGITS) 
         VALID_PREDICTION = tf.nn.softmax(VALID_LOGTIS)
         TEST_PREDICTION = tf.nn.softmax(TEST_LOGITS)
+
+NUM_ITERATIONS = 3001
+
+with tf.Session(graph=GRAPH) as session:
+    """
+        Start the above variable initialization
+    """
+    tf.initialize_all_variables().run()
+    print("Variables initialized")
+
+    for step in range(NUM_ITERATIONS):
+        """
+            Generate a random base and then generate a minibatch
+        """
+        BASE = (step * BATCH_SIZE) % (TRAIN_LABELS.shape[0] - BATCH_SIZE)
+        BATCH_DATA = TRAIN_DATASET[BASE:(BASE + BATCH_SIZE), :]
+        BATCH_LABELS = TRAIN_LABELS[BASE:(BASE + BATCH_SIZE), :]
+        """
+            Feed the current session with batch data
+        """
+        FEED_DICT = {TF_TRAIN_DATASET: BATCH_DATA, TF_TRAIN_LABELS: BATCH_LABELS}
+        _, l, predictions = session.run([OPTIMIZER, LOSS, TRAIN_PREDICTION], feed_dict=FEED_DICT)
+        
+        if(step % 500 == 0):
+            print("Minibatch loss at step ", step, ": ", l)
+            print("Minibatch accuracy: ", accuracy(predictions, BATCH_LABELS))
+            print("Validation accuracy: ", accuracy(VALID_PREDICTION.eval(), VALID_LABELS))
+    """
+        Displays the test prediction results
+    """
+    print("Test accuracy: ", accuracy(TEST_PREDICTION.eval(), TEST_LABELS))
