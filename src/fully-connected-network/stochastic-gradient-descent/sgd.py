@@ -105,7 +105,7 @@ with GRAPH.as_default():
     VALID_PREDICTION = tf.nn.softmax(tf.matmul(TF_VALID_DATASET, WEIGHTS) + BIASES)
     TEST_PREDICTION = tf.nn.softmax(tf.matmul(TF_TEST_DATASET, WEIGHTS) + BIASES)
 
-NUM_ITERATIONS = 3000
+NUM_ITERATIONS = 3001
 
 with tf.Session(graph=GRAPH) as session:
     """
@@ -115,13 +115,26 @@ with tf.Session(graph=GRAPH) as session:
     print("Variables initialized")
 
     for step in range(NUM_ITERATIONS):
-            _, l, predictions = session.run([OPTIMIZER, LOSS, TRAIN_PREDICTION])
-            if(step % 100 == 0):
-                print("Loss at step ", step, ": ", l)
-                print("Training accuracy: ", accuracy(predictions, TRAIN_LABELS[:TRAIN_SUBSET, :]))
+        """
+            Generate a random base and then generate a minibatch
+        """
+        BASE = (step * BATCH_SIZE) % (TRAIN_LABELS.shape[0] - BATCH_SIZE)
+        BATCH_DATA = TRAIN_DATASET[BASE:(BASE + BATCH_SIZE), :]
+        BATCH_LABELS = TRAIN_LABELS[BASE:(BASE + BATCH_SIZE), :]
+
+        """
+            Feed the current session with batch data
+        """
+        FEED_DICT = {TF_TRAIN_DATASET: BATCH_DATA, TF_TRAIN_LABELS: BATCH_LABELS}
+        _, l, predictions = session.run([OPTIMIZER, LOSS, TRAIN_PREDICTION], feed_dict=FEED_DICT)
+        
+        if(step % 500 == 0):
+            print("Minibatch loss at step ", step, ": ", l)
+            print("Minibatch accuracy: ", accuracy(predictions, BATCH_LABELS))
+            print("Validation accuracy: ", accuracy(VALID_PREDICTION.eval(), VALID_LABELS))
+
 
     """
         Displays the test prediction results
     """
-    print("Validation accuracy: ", accuracy(VALID_PREDICTION.eval(), VALID_LABELS))
     print("Test accuracy: ", accuracy(TEST_PREDICTION.eval(), TEST_LABELS))
