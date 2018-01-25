@@ -18,7 +18,7 @@ import tensorflow as tf
 PICKLE_FILE = "../../../data/notMNIST.pickle"
 
 # Load the data to the RAM
-with open(PICKLE_FILE, "rb") as f:
+with open(PICKLE_FILE, 'rb') as f:
     SAVE_FILE = pickle.load(f)
 
     TRAIN_DATASET = SAVE_FILE['train_dataset']
@@ -33,8 +33,7 @@ with open(PICKLE_FILE, "rb") as f:
     # Free some memory
     del SAVE_FILE
 
-# Reformat to the one-hot encoding mode
-# def reformatData(dataset, labels):
+
 IMAGE_SIZE = 28
 NUM_LABELS = 10
 
