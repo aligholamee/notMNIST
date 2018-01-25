@@ -55,14 +55,14 @@ def reformat_dataset(dataset, labels, name):
         Reformat the data to the one-hot and flattened mode
     """
     dataset = dataset.reshape((-1, DATASETS["TOTAL_IMAGE_SIZE"])).astype(np.float32)
-    labels = (np.arange(DATASETS["NUM_LABELS"] == labels[:, None])).astype(np.float32)
+    labels = (np.arange(DATASETS["NUM_LABELS"]) == labels[:, None]).astype(np.float32)
     print(name + " set", dataset.shape, labels.shape)
 
     return dataset, labels
 
-DATASETS["train"], DATASETS["train_labels"] = reformat(TRAIN_DATASET, TRAIN_LABELS, "Training")
-DATASETS["valid"], DATASETS["valid_labels"] = reformat(VALID_DATASET, VALID_LABELS, "Validation")
-DATASETS["test"], DATASETS["test_labels"] = reformat(TEST_DATASET, TEST_LABELS, "Test")
+DATASETS["train"], DATASETS["train_labels"] = reformat_dataset(TRAIN_DATASET, TRAIN_LABELS, "Training")
+DATASETS["valid"], DATASETS["valid_labels"] = reformat_dataset(VALID_DATASET, VALID_LABELS, "Validation")
+DATASETS["test"], DATASETS["test_labels"] = reformat_dataset(TEST_DATASET, TEST_LABELS, "Test")
 
 print(DATASETS.keys())
 
@@ -89,15 +89,15 @@ def run_graph(graph_info, data, step_count):
 
             TARGETS = [graph_info["OPTIMIZER"], graph_info["LOSS"], graph_info["TRAIN"]]
 
-            FEED_DICT = {graph_info["TF_TRAIN_DATASET"]: BATCH_DATA, graph_info["TF_TRAIN_LABELS"]: BATCH_LABELS}
+            FEED_DICT = {graph_info["TF_TRAIN"]: BATCH_DATA, graph_info["TF_TRAIN_LABELS"]: BATCH_LABELS}
 
             _, l, predictions = session.run(TARGETS, feed_dict=FEED_DICT)
             if(step % 500 == 0):
                 print("Minibatch loss at step ", step, ":", l)
                 print("Minibatch accuracy: ", accuracy(predictions, BATCH_LABELS))
-                print("Validation accuracy: ", accuracy(graph_info["VALID"].eval(), data["VALID_LABELS"]))
+                print("Validation accuracy: ", accuracy(graph_info["VALID"].eval(), data["valid_labels"]))
 
-        print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), data["TEST_LABELS"]))
+        print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), data["test_labels"]))
 
 def setup_logistic(batch_size, rate_alpha, l2_beta, data):
     graph = tf.Graph()
@@ -107,8 +107,8 @@ def setup_logistic(batch_size, rate_alpha, l2_beta, data):
         # at run time with a training minibatch.
         tf_train = tf.placeholder(tf.float32, shape=(batch_size, data["TOTAL_IMAGE_SIZE"]))
         tf_train_labels = tf.placeholder(tf.float32, shape=(batch_size, data["NUM_LABELS"]))
-        tf_valid = tf.constant(data["VALID"])
-        tf_test = tf.constant(data["TEST"])
+        tf_valid = tf.constant(data["valid"])
+        tf_test = tf.constant(data["test"])
 
         # Variables.
         weights = tf.Variable(tf.truncated_normal([data["TOTAL_IMAGE_SIZE"], data["NUM_LABELS"]]))
@@ -116,7 +116,7 @@ def setup_logistic(batch_size, rate_alpha, l2_beta, data):
 
         # Training computation.
         logits = tf.matmul(tf_train, weights) + biases
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_train_labels))
         loss += l2_beta * tf.nn.l2_loss(weights)
 
         info = {
@@ -137,4 +137,4 @@ def setup_logistic(batch_size, rate_alpha, l2_beta, data):
 
 LOGISTIC_GRAPH = setup_logistic(batch_size=128, rate_alpha=0.5, l2_beta=0.01, data=DATASETS)
 
-run_graph(LOGISTIC_GRAPH, datasets, 3000)
+run_graph(LOGISTIC_GRAPH, DATASETS, 3000)
