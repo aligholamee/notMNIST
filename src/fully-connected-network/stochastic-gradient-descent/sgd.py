@@ -1,5 +1,5 @@
 # ========================================
-# [] File Name : model.py
+# [] File Name : sgd.py
 #
 # [] Creation Date : January 2018
 #
@@ -8,14 +8,14 @@
 
 """
     Training and Validation on notMNIST Dataset
-    Fully connected network implementation with tensorflow
+    Stochastic gradient descent implementation with tensorflow
 """
 import pickle as pickle
 import numpy as np
 import tensorflow as tf
 
 # Data destination path
-PICKLE_FILE = "../../data/notMNIST.pickle"
+PICKLE_FILE = "../  ../../data/notMNIST.pickle"
 
 # Load the data to the RAM
 with open(PICKLE_FILE, "rb") as f:
@@ -65,19 +65,19 @@ print("Validation Set", VALID_DATASET.shape, VALID_LABELS.shape)
 print("Test Set", TEST_DATASET.shape, TEST_LABELS.shape)
 
 # Implements a gradient descent using tensorflow computational graph
-TRAIN_SUBSET = 10000
+BATCH_SIZE = 128
 
 GRAPH = tf.Graph()
 
 with GRAPH.as_default():
 
     """
-        Load the training, validation and test data into the constants attached to the graph
+        Create place holders for the training data shape, with respect to the batch size
     """
-    TF_TRAIN_DATASET = tf.constant(TRAIN_DATASET[:TRAIN_SUBSET, :])
-    TF_TRAIN_LABELS = tf.constant(TRAIN_LABELS[:TRAIN_SUBSET])
-    TF_VALID_DATASET = tf.constant(VALID_DATASET[:TRAIN_SUBSET])
-    TF_TEST_DATASET = tf.constant(TEST_DATASET[:TRAIN_SUBSET])
+    TF_TRAIN_DATASET = tf.placeholder(tf.float32, shape=(BATCH_SIZE * IMAGE_SIZE * IMAGE_SIZE))
+    TF_TRAIN_LABELS = tf.placeholder(tf.float32, shape=(BATCH_SIZE, NUM_LABELS))
+    TF_VALID_DATASET = tf.constant(VALID_DATASET)
+    TF_TEST_DATASET = tf.constant(TEST_DATASET)
 
 
     """
@@ -92,7 +92,7 @@ with GRAPH.as_default():
     LOGITS = tf.matmul(TF_TRAIN_DATASET, WEIGHTS) + BIASES
     LOSS = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels = TF_TRAIN_LABELS, logits = LOGITS))
 
-    """ 
+    """
         Find the minimum of the loss using gradient descent optimizer
         remember that the optimizer is an algorithm now - ready to be tested on the test data
     """
@@ -119,17 +119,9 @@ with tf.Session(graph=GRAPH) as session:
             if(step % 100 == 0):
                 print("Loss at step ", step, ": ", l)
                 print("Training accuracy: ", accuracy(predictions, TRAIN_LABELS[:TRAIN_SUBSET, :]))
-    
+
     """
         Displays the test prediction results
     """
     print("Validation accuracy: ", accuracy(VALID_PREDICTION.eval(), VALID_LABELS))
     print("Test accuracy: ", accuracy(TEST_PREDICTION.eval(), TEST_LABELS))
-
-
-
-    
-
-    
-
-
