@@ -23,14 +23,14 @@ PICKLE_FILE = "../../../data/notMNIST.pickle"
 with open(PICKLE_FILE, 'rb') as f:
     SAVE_FILE = pickle.load(f)
 
-    TRAIN_DATASET = SAVE_FILE('train_dataset')
-    TRAIN_LABELS = SAVE_FILE('train_labels')
+    TRAIN_DATASET = SAVE_FILE['train_dataset']
+    TRAIN_LABELS = SAVE_FILE['train_labels']
 
-    VALID_DATASET = SAVE_FILE('valid_dataset')
-    VALID_LABELS = SAVE_FILE('valid_labels')
+    VALID_DATASET = SAVE_FILE['valid_dataset']
+    VALID_LABELS = SAVE_FILE['valid_labels']
 
-    TEST_DATASET = SAVE_FILE('test_dataset')
-    TEST_LABELS = SAVE_FILE('test_labels')
+    TEST_DATASET = SAVE_FILE['test_dataset']
+    TEST_LABELS = SAVE_FILE['test_labels']
 
     # Free some memory
     del SAVE_FILE
@@ -51,7 +51,7 @@ def reformat(dataset, labels):
     n_dataset = dataset.reshape((-1, IMAGE_SIZE * IMAGE_SIZE)).astype(np.float32)
 
     # Convert to the one hot format
-    n_labels = (np.arrange(NUM_LABELS) == labels[:, None]).astype(np.float32)
+    n_labels = (np.arange(NUM_LABELS) == labels[:, None]).astype(np.float32)
 
     return n_dataset, n_labels
 
@@ -113,7 +113,7 @@ with GRAPH.as_default():
         VALID_LOGTIS = tf.matmul(VALID_HIDDEN_LOGITS, WEIGHTS) + BIASES
         TEST_LOGITS = tf.matmul(TEST_HIDDEN_LOGITS, WEIGHTS) + BIASES
 
-        LOSS = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(TRAIN_LOGITS, TF_TRAIN_LABELS))
+        LOSS = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=TRAIN_LOGITS, labels=TF_TRAIN_LABELS))
 
         OPTIMIZER = tf.train.GradientDescentOptimizer(0.5).minimize(LOSS)
 
