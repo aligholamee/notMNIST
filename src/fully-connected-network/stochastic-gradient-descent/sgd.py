@@ -15,7 +15,7 @@ import numpy as np
 import tensorflow as tf
 
 # Data destination path
-PICKLE_FILE = "../  ../../data/notMNIST.pickle"
+PICKLE_FILE = "../../../data/notMNIST.pickle"
 
 # Load the data to the RAM
 with open(PICKLE_FILE, "rb") as f:
@@ -74,7 +74,7 @@ with GRAPH.as_default():
     """
         Create place holders for the training data shape, with respect to the batch size
     """
-    TF_TRAIN_DATASET = tf.placeholder(tf.float32, shape=(BATCH_SIZE * IMAGE_SIZE * IMAGE_SIZE))
+    TF_TRAIN_DATASET = tf.placeholder(tf.float32, shape=(BATCH_SIZE, IMAGE_SIZE * IMAGE_SIZE))
     TF_TRAIN_LABELS = tf.placeholder(tf.float32, shape=(BATCH_SIZE, NUM_LABELS))
     TF_VALID_DATASET = tf.constant(VALID_DATASET)
     TF_TEST_DATASET = tf.constant(TEST_DATASET)
