@@ -70,3 +70,31 @@ def accuracy(predictions, labels):
         Divides the number of true predictions to the number of total predictions
     """
     return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1)) / predictions.shape[0])
+
+def run_graph(graph_info, data, step_count):
+    """
+        Initializes and runs the tensor's graph
+    """
+    with tf.Session(graph = graph_info["GRAPH"]) as session:
+        tf.initialize_all_variables().run()
+        print("Initialized!")
+
+        BATCH_SIZE = graph_info["BATCH_SIZE"]
+
+        for step in range(step_count + 1):
+            BASE = (step * BATCH_SIZE) % (data["train_labels"].shape[0] - BATCH_SIZE)
+            BATCH_DATA = data["train"][BASE:(BASE + BATCH_SIZE), :]
+            BATCH_LABELS = data["train_labels"][BASE:(BASE + BATCH_SIZE), :]
+
+            TARGETS = [graph_info["OPTIMIZER"], graph_info["LOSS"], graph_info["train"]]
+
+            FEED_DICT = {graph_info["TF_TRAIN_DATASET"]: BATCH_DATA, graph_info["TF_TRAIN_LABELS"]: BATCH_LABELS}
+
+            _, l, predictions = session.run(TARGETS, feed_dict=FEED_DICT)
+            if(step % 500 == 0):
+                print("Minibatch loss at step ", step, ":", l)
+                print("Minibatch accuracy: ", accuracy(predictions, BATCH_LABELS))
+                print("Validation accuracy: ", accuracy(graph_info["VALID"].eval(), data["VALID_LABELS"]))
+
+        print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), data["TEST_LABELS"]))
+        
