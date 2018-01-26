@@ -38,7 +38,6 @@ with open(PICKLE_FILE, 'rb') as f:
     # Free some memory
     del SAVE_FILE
 
-
     print("Training set: ", TRAIN_DATASET.shape, TRAIN_LABELS.shape)
     print("Validation set: ", VALID_DATASET.shape, VALID_LABELS.shape)
     print("Test set: ", TEST_DATASET.shape, TEST_LABELS.shape)
@@ -130,17 +129,17 @@ def setup_neural(batch_size, rate_alpha, l2_beta, hidden_size, data):
             test_logits = tf.matmul(test_hidden, weights) + biases
 
         # Training computation.
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(train_logits, tf_train_labels))
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=train_logits, labels=tf_train_labels))
         loss += l2_beta * (tf.nn.l2_loss(hidden_weights) + tf.nn.l2_loss(weights))
 
         info = {
-            "graph": graph,
-            "batch_size": batch_size,
-            "tf_train": tf_train,
-            "tf_train_labels": tf_train_labels,
-            "loss": loss,
+            "GRAPH": graph,
+            "BATCH_SIZE": batch_size,
+            "TF_TRAIN": tf_train,
+            "TF_TRAIN_LABELS": tf_train_labels,
+            "LOSS": loss,
             # Optimizer.
-            "optimizer": tf.train.GradientDescentOptimizer(rate_alpha).minimize(loss),
+            "OPTIMIZER": tf.train.GradientDescentOptimizer(rate_alpha).minimize(loss),
             # Predictions for the training, validation, and test data.
             "TRAIN": tf.nn.softmax(train_logits),
             "VALID": tf.nn.softmax(valid_logits),
@@ -149,6 +148,6 @@ def setup_neural(batch_size, rate_alpha, l2_beta, hidden_size, data):
     return info
 
 
-neural_graph = setup_neural(batch_size=128, hidden_size = 1024, rate_alpha=0.5, l2_beta=0.001, data=datasets)
+neural_graph = setup_neural(batch_size=128, hidden_size = 1024, rate_alpha=0.5, l2_beta=0.001, data=DATASETS)
 
-run_graph(neural_graph, datasets, 3000)
+run_graph(neural_graph, DATASETS, 3000)
