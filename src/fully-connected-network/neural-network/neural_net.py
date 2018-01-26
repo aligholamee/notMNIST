@@ -90,10 +90,10 @@ with GRAPH.as_default():
         HIDDEN_WEIGHTS = tf.Variable(tf.truncated_normal([IMAGE_SIZE * IMAGE_SIZE, HIDDEN_NODES]))
         HIDDEN_BIASES = tf.Variable(tf.zeros([HIDDEN_NODES]))
 
-        """ 
+        """
             Compute the logits WX + b and then apply D(S(WX + b), L) on them for the hidden layer
             The relu is applied on the hidden layer nodes only
-        
+
         """
         TRAIN_HIDDEN_LOGITS = tf.nn.relu(tf.matmul(TF_TRAIN_DATASET, HIDDEN_WEIGHTS) + HIDDEN_BIASES)
         VALID_HIDDEN_LOGITS = tf.nn.relu(tf.matmul(TF_VALID_DATASET, HIDDEN_WEIGHTS) + HIDDEN_BIASES)
@@ -117,7 +117,7 @@ with GRAPH.as_default():
 
         OPTIMIZER = tf.train.GradientDescentOptimizer(0.5).minimize(LOSS)
 
-        TRAIN_PREDICTION = tf.nn.softmax(TRAIN_LOGITS) 
+        TRAIN_PREDICTION = tf.nn.softmax(TRAIN_LOGITS)
         VALID_PREDICTION = tf.nn.softmax(VALID_LOGTIS)
         TEST_PREDICTION = tf.nn.softmax(TEST_LOGITS)
 
@@ -142,7 +142,7 @@ with tf.Session(graph=GRAPH) as session:
         """
         FEED_DICT = {TF_TRAIN_DATASET: BATCH_DATA, TF_TRAIN_LABELS: BATCH_LABELS}
         _, l, predictions = session.run([OPTIMIZER, LOSS, TRAIN_PREDICTION], feed_dict=FEED_DICT)
-        
+
         if(step % 500 == 0):
             print("Minibatch loss at step ", step, ": ", l)
             print("Minibatch accuracy: ", accuracy(predictions, BATCH_LABELS))
