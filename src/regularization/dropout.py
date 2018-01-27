@@ -1,5 +1,5 @@
 # ========================================
-# [] File Name : logistic_l2_regularization.py
+# [] File Name : dropout.py
 #
 # [] Creation Date : January 2018
 #
@@ -10,8 +10,9 @@
     Training and Validation on notMNIST Dataset.
     Implementing some regularization techniques on various classification methods.
     Regularization improves the final test accuarcy.
-    This is the implementation of the L2 regularization technique on the logistic classifier.
+    This is the implementation of the dropout on the neural network.
 """
+
 from __future__ import print_function
 import tensorflow as tf
 import numpy as np
@@ -98,13 +99,14 @@ def run_graph(graph_info, data, step_count):
 
         print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), data["test_labels"]))
 
-def setup_logistic(batch_size, rate_alpha, l2_beta, data):
+def setup_neural_dropout(batch_size, rate_alpha, l2_beta, hidden_size, data, dropout_rate):
     """
-        Initializes a logistic classifier with tensorflow computational graph
+        Initializes a neural network with tensorflow computational graph
     """
     graph = tf.Graph()
 
     with graph.as_default():
+
         # Input data. For the training data, we use a placeholder that will be fed
         # at run time with a training minibatch.
         tf_train = tf.placeholder(tf.float32, shape=(batch_size, data["TOTAL_IMAGE_SIZE"]))
@@ -112,14 +114,26 @@ def setup_logistic(batch_size, rate_alpha, l2_beta, data):
         tf_valid = tf.constant(data["valid"])
         tf_test = tf.constant(data["test"])
 
-        # Variables.
-        weights = tf.Variable(tf.truncated_normal([data["TOTAL_IMAGE_SIZE"], data["NUM_LABELS"]]))
-        biases = tf.Variable(tf.zeros([data["NUM_LABELS"]]))
+        # Hidden layer
+        with tf.name_scope("hidden1"):
+            hidden_weights = tf.Variable(tf.truncated_normal([data["TOTAL_IMAGE_SIZE"], hidden_size]))
+            hidden_biases = tf.Variable(tf.zeros([hidden_size]))
+            train_hidden = tf.nn.relu(tf.matmul(tf_train, hidden_weights) + hidden_biases)
+            valid_hidden = tf.nn.relu(tf.matmul(tf_valid, hidden_weights) + hidden_biases)
+            test_hidden = tf.nn.relu(tf.matmul(tf_test, hidden_weights) + hidden_biases)
+            # Applies the dropout regularization with respect to the hidden layers of the network and the dropout_rate
+            hidden_dropout = tf.nn.dropout(train_hidden, dropout_rate, seed=12345)
+
+        with tf.name_scope("softmax_linear"):
+            weights = tf.Variable(tf.truncated_normal([hidden_size, data["NUM_LABELS"]]))
+            biases = tf.Variable(tf.zeros([data["NUM_LABELS"]]))
+            train_logits = tf.matmul(train_hidden, weights) + biases
+            valid_logits = tf.matmul(valid_hidden, weights) + biases
+            test_logits = tf.matmul(test_hidden, weights) + biases
 
         # Training computation.
-        logits = tf.matmul(tf_train, weights) + biases
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_train_labels))
-        loss += l2_beta * tf.nn.l2_loss(weights)
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=train_logits, labels=tf_train_labels))
+        loss += l2_beta * (tf.nn.l2_loss(hidden_weights) + tf.nn.l2_loss(weights))
 
         info = {
             "GRAPH": graph,
@@ -130,13 +144,11 @@ def setup_logistic(batch_size, rate_alpha, l2_beta, data):
             # Optimizer.
             "OPTIMIZER": tf.train.GradientDescentOptimizer(rate_alpha).minimize(loss),
             # Predictions for the training, validation, and test data.
-            "TRAIN": tf.nn.softmax(logits),
-            "VALID": tf.nn.softmax(tf.matmul(tf_valid, weights) + biases),
-            "TEST": tf.nn.softmax(tf.matmul(tf_test, weights) + biases)
+            "TRAIN": tf.nn.softmax(train_logits),
+            "VALID": tf.nn.softmax(valid_logits),
+            "TEST": tf.nn.softmax(test_logits)
         }
-
     return info
 
-LOGISTIC_GRAPH = setup_logistic(batch_size=128, rate_alpha=0.5, l2_beta=0.01, data=DATASETS)
-
-run_graph(LOGISTIC_GRAPH, DATASETS, 3000)
+dropout_graph = setup_neural_dropout(batch_size=128, hidden_size=1024, rate_alpha=0.5, l2_beta=0.001, data=DATASETS, dropout_rate=0.5)
+run_graph(dropout_graph, DATASETS, 3000)
