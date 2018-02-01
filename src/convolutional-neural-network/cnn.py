@@ -79,6 +79,9 @@ DATASETS["VALID"], DATASETS["VALID_LABELS"] = reformat(VALID_DATASET, VALID_LABE
 print(DATASETS.keys())
 
 def run_graph(graph_info, data, step_count, report_every=50):
+    """
+        Initializes and runs the tensor's graph
+    """
     with tf.Session(graph=graph_info["GRAPH"]) as session:
         tf.initialize_all_variables().run()
         print("Initialized!")
@@ -106,5 +109,29 @@ def run_graph(graph_info, data, step_count, report_every=50):
 
         print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), DATASETS["TEST_LABELS"]))
 
+def two_layer_convnet(batch_size, patch_size, depth, hidden_size, data):
+    
+    # Some temp variables
+    image_size = DATASETS["IMAGE_SIZE"]
+    num_labels = DATASETS["NUM_LABELS"]
+    num_channels = DATASETS["NUM_CHANNELS"]
+    graph = tf.Graph()
+    with graph.as_default():
+        # Input data
+        train = tf.placeholder(tf.float32, shape=(batch_size, image_size, image_size, channel_count))
+        labels= tf.placeholder(tf.float32, shape=(batch_size, label_count))
+        valid = tf.constant(DATASETS["VALID"])
+        test  = tf.constant(DATASETS["TEST"])
 
-        
+        # Variables
+        layer1_weights = tf.Variable(tf.truncate_normal([patch_size, patch_size, num_channels, depth], stddev=0.1))
+        layer1_biases = tf.Variable(tf.zeros([depth]))
+
+        layer2_weights = tf.Variable(tf.truncate_normal([patch_size, patch_size, depth, depth], stddev=0.1))
+        layer2_biases = tf.Variable(tf.constant(1.0, shape=[depth]))
+
+        layer3_weights = tf.Variable(tf.truncate_normal([image_size // 4 * image_size // 4 * depth, hidden_size], std_dev=0.1))
+        layer3_biases = tf.Variable(tf.constant(1.0, shape=[hidden_size]))
+
+        layer4_weights = tf.Variable(tf.truncate_normal([hidden_size, num_labels], std_dev=0.1))
+        layer4_biases = tf.Variable(tf.constant(1.0, shape=[num_labels]))
