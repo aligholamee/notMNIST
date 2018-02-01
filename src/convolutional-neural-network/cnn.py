@@ -165,3 +165,7 @@ def two_layer_convnet(batch_size, patch_size, depth, hidden_size, data):
             "TEST":  tf.nn.softmax(model(test))
         }
     return info
+
+GRAPH_2CONV = convnet_two_layer(batch_size=16, patch_size=5, depth=16, hidden_size=64, data=DATASETS)
+
+run_graph(GRAPH_2CONV, DATASETS, 1000)
