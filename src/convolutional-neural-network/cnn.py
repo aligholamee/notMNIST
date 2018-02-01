@@ -135,3 +135,33 @@ def two_layer_convnet(batch_size, patch_size, depth, hidden_size, data):
 
         layer4_weights = tf.Variable(tf.truncate_normal([hidden_size, num_labels], std_dev=0.1))
         layer4_biases = tf.Variable(tf.constant(1.0, shape=[num_labels]))
+
+        # Create connections and create model
+        def model(set):
+            conv   = tf.nn.conv2d(set, layer1_weights, [1, 2, 2, 1], padding='SAME')
+            hidden = tf.nn.relu(conv + layer1_biases)
+            conv   = tf.nn.conv2d(hidden, layer2_weights, [1, 2, 2, 1], padding='SAME')
+            hidden = tf.nn.relu(conv + layer2_biases)
+            shape  = hidden.get_shape().as_list()
+            reshape= tf.reshape(hidden, [shape[0], shape[1] * shape[2] * shape[3]])
+            hidden = tf.nn.relu(tf.matmul(reshape, layer3_weights) + layer3_biases)
+            return tf.matmul(hidden, layer4_weights) + layer4_biases
+
+        # Training computation
+        logits = model(train)
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, labels))
+        
+        info = {
+            "GRAPH": graph,
+            "BATCH_SIZE": batch_size,
+            "TRAIN": train,
+            "LABELS": labels,
+            "LOSS": loss,
+            "OPTIMIZER": tf.train.GradientDescentOptimizer(0.05).minimize(loss),
+
+            # Predictions for the training, validation, and test data.
+            "PREDICTIONS": tf.nn.softmax(logits),
+            "VALID": tf.nn.softmax(model(valid)),
+            "TEST":  tf.nn.softmax(model(test))
+        }
+    return info
