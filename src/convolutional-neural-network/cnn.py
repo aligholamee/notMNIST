@@ -64,7 +64,8 @@ def reformat(dataset, labels, name):
     """
 
     dataset = dataset.reshape((-1, DATASETS["IMAGE_SIZE"], DATASETS["IMAGE_SIZE"], DATASETS["NUM_CHANNELS"])).astype(np.float32)
-    labels = (np.arange(DATASETS["NUM_LABELS"]) == labels[:, None]).astype(np.float32)
+    labels = (np.arange(D
+    ATASETS["NUM_LABELS"]) == labels[:, None]).astype(np.float32)
 
     print(name, " set", dataset.shape, labels.shape)
 
@@ -77,3 +78,33 @@ DATASETS["VALID"], DATASETS["VALID_LABELS"] = reformat(VALID_DATASET, VALID_LABE
 
 print(DATASETS.keys())
 
+def run_graph(graph_info, data, step_count, report_every=50):
+    with tf.Session(graph=graph_info["GRAPH"]) as session:
+        tf.initialize_all_variables().run()
+        print("Initialized!")
+
+        batch_size = graph_info["BATCH_SIZE"]
+
+        for step in range(step_count + 1):
+            base = (step * batch_size) % (data["TRAIN_LABELS"].shape[0] - batch_size)
+
+            # Generate a minibatch
+            batch_data = data["TRAIN"][base:(base + batch_size), :, :, :]
+            batch_labels = data["TRAIN_LABELS"][base:(base + batch_size), :]
+
+            # Prepare the targets
+            targets = [graph_info["OPTIMIZER"], graph_info["LOSS"], graph_info["PREDICTIONS"]]
+            feed_dict = {graph_info["TRAIN"]: batch_data, graph_info["TRAIN_LABELS"]: batch_labels}
+
+            _, l, predictions = session.run(targets, feed_dict=feed_dict)
+            
+            if(step % report_every == 0):
+                print("Minibatch loss at step, ", step, ": ", l)
+                print("Minibatch accuracy: ", accuracy(predictions, batch_labels))
+                print("Validation accuracy: ", accuracy(DATASETS["VALID"].eval(), DATASETS["VALID_LABELS"])
+            
+
+        print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), DATASETS["TEST_LABELS"]))
+
+
+        
