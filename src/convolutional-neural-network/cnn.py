@@ -45,9 +45,9 @@ with open(PICKLE_FILE, 'rb') as f:
     print("Test set :", TEST_DATASET.shape, TEST_LABELS.shape)
 
 DATASETS = {
-   "IMAGE_SIZE": 28, 
+   "IMAGE_SIZE": 28,
    "NUM_LABELS": 10,
-   "NUM_CHANNELS": 10
+   "NUM_CHANNELS": 1
 }
 
 DATASETS["TOTAL_IMAGE_SIZE"] = DATASETS["IMAGE_SIZE"] * DATASETS["IMAGE_SIZE"]
