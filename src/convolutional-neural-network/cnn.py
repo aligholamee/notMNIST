@@ -1,4 +1,4 @@
-# ========================================
+ # ========================================
 # [] File Name : cnn.py
 #
 # [] Creation Date : January 2018
@@ -96,14 +96,14 @@ def run_graph(graph_info, data, step_count, report_every=50):
 
             # Prepare the targets
             targets = [graph_info["OPTIMIZER"], graph_info["LOSS"], graph_info["PREDICTIONS"]]
-            feed_dict = {graph_info["TRAIN"]: batch_data, graph_info["TRAIN_LABELS"]: batch_labels}
+            feed_dict = {graph_info["TRAIN"]: batch_data, graph_info["LABELS"]: batch_labels}
 
             _, l, predictions = session.run(targets, feed_dict=feed_dict)
             
             if(step % report_every == 0):
                 print("Minibatch loss at step, ", step, ": ", l)
                 print("Minibatch accuracy: ", accuracy(predictions, batch_labels))
-                print("Validation accuracy: ", accuracy(DATASETS["VALID"].eval(), DATASETS["VALID_LABELS"]))
+                print("Validation accuracy: ", accuracy(graph_info["VALID"].eval(), DATASETS["VALID_LABELS"]))
             
         print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), DATASETS["TEST_LABELS"]))
 
@@ -116,22 +116,22 @@ def two_layer_convnet(batch_size, patch_size, depth, hidden_size, data):
     graph = tf.Graph()
     with graph.as_default():
         # Input data
-        train = tf.placeholder(tf.float32, shape=(batch_size, image_size, image_size, channel_count))
-        labels= tf.placeholder(tf.float32, shape=(batch_size, label_count))
+        train = tf.placeholder(tf.float32, shape=(batch_size, image_size, image_size, num_channels))
+        labels= tf.placeholder(tf.float32, shape=(batch_size, num_labels))
         valid = tf.constant(DATASETS["VALID"])
         test  = tf.constant(DATASETS["TEST"])
 
         # Variables
-        layer1_weights = tf.Variable(tf.truncate_normal([patch_size, patch_size, num_channels, depth], stddev=0.1))
+        layer1_weights = tf.Variable(tf.truncated_normal([patch_size, patch_size, num_channels, depth], stddev=0.1))
         layer1_biases = tf.Variable(tf.zeros([depth]))
 
-        layer2_weights = tf.Variable(tf.truncate_normal([patch_size, patch_size, depth, depth], stddev=0.1))
+        layer2_weights = tf.Variable(tf.truncated_normal([patch_size, patch_size, depth, depth], stddev=0.1))
         layer2_biases = tf.Variable(tf.constant(1.0, shape=[depth]))
 
-        layer3_weights = tf.Variable(tf.truncate_normal([image_size // 4 * image_size // 4 * depth, hidden_size], std_dev=0.1))
+        layer3_weights = tf.Variable(tf.truncated_normal([image_size // 4 * image_size // 4 * depth, hidden_size], stddev=0.1))
         layer3_biases = tf.Variable(tf.constant(1.0, shape=[hidden_size]))
 
-        layer4_weights = tf.Variable(tf.truncate_normal([hidden_size, num_labels], std_dev=0.1))
+        layer4_weights = tf.Variable(tf.truncated_normal([hidden_size, num_labels], stddev=0.1))
         layer4_biases = tf.Variable(tf.constant(1.0, shape=[num_labels]))
 
         # Create connections and create model
@@ -147,7 +147,7 @@ def two_layer_convnet(batch_size, patch_size, depth, hidden_size, data):
 
         # Training computation
         logits = model(train)
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, labels))
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
         
         info = {
             "GRAPH": graph,
@@ -164,6 +164,6 @@ def two_layer_convnet(batch_size, patch_size, depth, hidden_size, data):
         }
     return info
 
-GRAPH_2CONV = convnet_two_layer(batch_size=16, patch_size=5, depth=16, hidden_size=64, data=DATASETS)
+GRAPH_2CONV = two_layer_convnet(batch_size=16, patch_size=5, depth=16, hidden_size=64, data=DATASETS)
 
 run_graph(GRAPH_2CONV, DATASETS, 1000)
