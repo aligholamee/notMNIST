@@ -103,9 +103,9 @@ def run_graph(graph_info, data, step_count, report_every=50):
             if(step % report_every == 0):
                 print("Minibatch loss at step, ", step, ": ", l)
                 print("Minibatch accuracy: ", accuracy(predictions, batch_labels))
-                print("Validation accuracy: ", accuracy(graph_info["VALID"].eval(), DATASETS["VALID_LABELS"]))
+                print("Validation accuracy: ", accuracy(graph_info["VALID"].eval(), data["VALID_LABELS"]))
             
-        print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), DATASETS["TEST_LABELS"]))
+        print("Test accuracy: ", accuracy(graph_info["TEST"].eval(), data["TEST_LABELS"]))
 
 def two_layer_convnet(batch_size, patch_size, depth, hidden_size, data):
     
@@ -166,4 +166,4 @@ def two_layer_convnet(batch_size, patch_size, depth, hidden_size, data):
 
 GRAPH_2CONV = two_layer_convnet(batch_size=16, patch_size=5, depth=16, hidden_size=64, data=DATASETS)
 
-run_graph(GRAPH_2CONV, DATASETS, 1000)
+run_graph(GRAPH_2CONV, DATASETS, 1000   )
