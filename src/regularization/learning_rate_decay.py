@@ -152,7 +152,7 @@ def setup_neural_optimal(batch_size, rate_alpha, l2_beta, hidden_sizes, data, dr
             test_logits = tf.matmul(test_hidden, weights) + biases
 
         # Training computation.
-        cross = tf.nn.softmax_cross_entropy_with_logits(logits=train_logits, labels=ctf_train_labels)
+        cross = tf.nn.softmax_cross_entropy_with_logits(logits=train_logits, labels=tf_train_labels)
         loss = tf.reduce_mean(cross)
         loss += l2_beta * (hidden_loss + tf.nn.l2_loss(weights))
         
