@@ -14,7 +14,7 @@ Feel free to have a look at the code. Feel more free to **contribute**. First of
 _Now you are good to go_. Play with the code as much as you can and run it to see the results.
 
 ## Suggested Platform
-You wont suffer from running the _logistic_ classifier. But, you can obviously see the performance defficieny while running the _CNN_ classifier on _CPU_. Its suggested to use the _tensorflow-gpu_. If you are on _ubuntu_ make sure you head to [this tutorial](https://github.com/williamFalcon/tensorflow-gpu-install-ubuntu-16.04) to setup the environment for the deep leaning with _tensorflow-gpu_.
+You won't suffer from running the _logistic_ classifier. But, you can obviously see the performance defficiency while running the _CNN_ classifier on _CPU_. Its suggested to use the _tensorflow-gpu_. If you are on _ubuntu_ make sure you head to [this tutorial](https://github.com/williamFalcon/tensorflow-gpu-install-ubuntu-16.04) to setup the environment for the deep leaning with _tensorflow-gpu_.
 
 ## Not Another MNIST Classification Task
 This is not another classification task on the MNIST dataset because of the two following reasons.
